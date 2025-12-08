@@ -43,3 +43,6 @@
 # Unity Package Manager (UPM) 缓存
 /Packages/manifest.json.orig
 /Packages/lock/
+
+# 忽略特定的大文件
+/Assets/Resources/Font/方正黑体_GBK SDF 1.asset
