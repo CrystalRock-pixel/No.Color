@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24098ef47b9b85e48a05d3142f609c68, type: 3}
+  m_Name: "11(\u7EFF\u53F6)"
+  m_EditorClassIdentifier: 
+  cardName: "\u7EFF\u53F6"
+  effectDescription: "\u6D88\u9664\u7EFF\u8272\u5219+10\u500D\u7387"
+  loreDescription: 
+  type: 0
+  cardImage: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
+  price: 4
+  cardType: 1
+  value: 10
+  comboScale: 0
+  comboStruct: 0
+  color: 2

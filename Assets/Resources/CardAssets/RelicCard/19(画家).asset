@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe68373b8ff14924b8da55cc6942eb96, type: 3}
+  m_Name: "19(\u753B\u5BB6)"
+  m_EditorClassIdentifier: 
+  cardName: "\u753B\u5BB6"
+  effectDescription: "\u6BCF\u4F7F\u7528\u4E00\u6B21\u67D3\u6599\u5361\u83B7\u5F970.1\u500D\u7387"
+  loreDescription: 
+  type: 0
+  cardImage: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
+  price: 6
+  cardType: 2
+  value: 1
+  perLevelValue: 0.1
+  detectCardType: 3
