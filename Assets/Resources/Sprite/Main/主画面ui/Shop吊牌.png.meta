@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: c75421ca0ea2acd46ad8f31ab8fd0d9c
+guid: 66957a6221feb54498c5cb89ef40642c
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -105,13 +105,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: next_0
+      name: "Shop\u540A\u724C_0"
       rect:
         serializedVersion: 2
-        x: 1235
-        y: 183
-        width: 154
-        height: 39
+        x: 1318
+        y: 807
+        width: 202
+        height: 161
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -119,8 +119,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 34f0e8d915d76e649b360ef6689d554f
-      internalID: -24402211
+      spriteID: 2517b67c9fb193444a78220ce9f3450b
+      internalID: 1002396521
       vertices: []
       indices: 
       edges: []
@@ -136,7 +136,7 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      next_0: -24402211
+      "Shop\u540A\u724C_0": 1002396521
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
