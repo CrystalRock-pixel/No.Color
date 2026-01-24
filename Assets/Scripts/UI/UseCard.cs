@@ -12,12 +12,12 @@ public class UseCard : MonoBehaviour
 
     public void OnUse()
     {
-        if (this.uiCard != null&&uiCard.GetCardInstance().cardData is PropCardData)
-        {
-            PropCardData cardData =(PropCardData) uiCard.GetCardInstance().cardData;
-            AudioManager.Instance.PlaySound(AudioManager.AudioType.CardUse);
-            cardData.OnUseCard();
-            uiCard.OnDestroyed();
-        }
+        //if (this.uiCard != null&&uiCard.GetCardData() is PropData)
+        //{
+        //    PropData cardData =(PropData) uiCard.GetCardData();
+        //    AudioManager.Instance.PlaySound(AudioManager.AudioType.CardUse);
+        //    cardData.OnUse();
+        //    uiCard.OnDestroyed();
+        //}
     }
 }

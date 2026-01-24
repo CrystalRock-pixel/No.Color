@@ -16,13 +16,16 @@ public class UIManager : MonoBehaviour
     private GameObject buySellButtonPrefab;
     private GameObject buttonPanelPrefab;
     private GameObject useCardButtonPrefab;
-    public Transform shopBackCanvasTrans;
-    public Transform shopFrontCanvasTrans;
+    private GameObject infoPanelPrefab;
+
+
+    public Transform backCanvasTrans;
+    public Transform frontCanvasTrans;
+
     public Transform shopPanelTrans;
     public Button shopNextLevelBtn;
 
-    private Dictionary<UICard,GameObject> currentDialogPanelDicts;
-    private Dictionary<UICard,GameObject> currentButtonPanelDicts;
+    private Dictionary<Transform,GameObject> currentInfoPanelDicts;
 
     [Header("信息面板")]
     public TMP_Text baseChipsText;
@@ -83,9 +86,9 @@ public class UIManager : MonoBehaviour
         buySellButtonPrefab = Resources.Load<GameObject>("Prefabs/UI/BuySellDialog");
         buttonPanelPrefab = Resources.Load<GameObject>("Prefabs/UI/CardButtonPanel");
         useCardButtonPrefab = Resources.Load<GameObject>("Prefabs/UI/UsedDialog");
+        infoPanelPrefab = Resources.Load<GameObject>("Prefabs/UI/InfoPanel/InfoPanel");
 
-        currentDialogPanelDicts = new Dictionary<UICard, GameObject>();
-        currentButtonPanelDicts= new Dictionary<UICard, GameObject>();
+        currentInfoPanelDicts = new Dictionary<Transform, GameObject>();
 
         //OnSingleCaculateScore += UpdateScorePanel;
         OnFinalScoreCalculated += UpdateFinalScore;
@@ -118,72 +121,42 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 显示卡牌信息对话框
+    /// 显示信息面板
     /// </summary>
-    /// <param name="uiCard"></param>
+    /// <param name="config"></param>
     /// <param name="position"></param>
-    public void ShowCardInfoDialog(UICard uiCard,Vector3 position)
-    {
-        if (currentDialogPanelDicts.ContainsKey(uiCard))
-        {
-            return;
-        }
-        GameObject dialogPanel = Instantiate(dialogPanelPrefab, position, Quaternion.identity);
-        GameObject cardDialog = Instantiate(cardDialogPrefab, dialogPanel.transform);
-        cardDialog.GetComponent<CardDialog>().SetCardInfo(uiCard.GetCardInstance());
+    /// <param name="infoObject"></param>
 
-        //dialogPanel.transform.parent = shopFrontCanvasTrans;
-        dialogPanel.transform.SetParent(shopFrontCanvasTrans, true);
-        dialogPanel.transform.localScale = Vector3.one;
-        StartCoroutine(ObjectAnimator.Instance.AnimateIn(dialogPanel,startRotationZ:5f));
-        currentDialogPanelDicts.Add(uiCard, dialogPanel);
-    }
-
-    /// <summary>
-    /// 显示卡牌按钮对话框
-    /// </summary>
-    /// <param name="uiCard"></param>
-    /// <param name="position"></param>
-    public void ShowCardButtonDialog(UICard uiCard,Vector3 position)
+    public void ShowInfoPanel(InfoPanelConfig config,Vector3 position,Transform infoObject)
     {
-        if (currentButtonPanelDicts.ContainsKey(uiCard))
+        if (currentInfoPanelDicts.ContainsKey(infoObject))
         {
-            return;
+            Destroy(currentInfoPanelDicts[infoObject]);
+            currentInfoPanelDicts.Remove(infoObject);
         }
 
-        GameObject buttonPanel = Instantiate(buttonPanelPrefab, position, Quaternion.identity);
-        GameObject buySellButton = Instantiate(buySellButtonPrefab, buttonPanel.transform);
-        buySellButton.GetComponent<BuySellCard>().SetUp(uiCard);
-        if (uiCard.isBought && uiCard.GetCardInstance().cardData is PropCardData)
-        {
-            GameObject useButton = Instantiate(useCardButtonPrefab, buttonPanel.transform);
-            useButton.GetComponent<UseCard>().SetUp(uiCard);
-        }
-        //buttonPanel.transform.parent = shopFrontCanvasTrans;
-        buttonPanel.transform.SetParent(shopFrontCanvasTrans,true);
-        buttonPanel.transform.localScale = Vector3.one;
-        currentButtonPanelDicts.Add(uiCard,buttonPanel);
+        GameObject infoPanel=Instantiate(infoPanelPrefab, position, Quaternion.identity);
+        infoPanel.GetComponent<InfoPanel>().Init(config,infoObject);
+        infoPanel.transform.SetParent(frontCanvasTrans, true);
+        infoPanel.transform.localScale = Vector3.one;
+        StartCoroutine(ObjectAnimator.Instance.AnimateIn(infoPanel, startRotationZ: 5f));
+        
+        currentInfoPanelDicts.Add(infoObject, infoPanel);
     }
-    public void RemoveCardInfoDialog(UICard uiCard)
+
+    public void RemoveInfoPanel(Transform infoObject)
     {
-        if (currentDialogPanelDicts.ContainsKey(uiCard))
+        if (currentInfoPanelDicts.ContainsKey(infoObject))
         {
-            Destroy(currentDialogPanelDicts[uiCard]);
-            currentDialogPanelDicts.Remove(uiCard);
+            Destroy(currentInfoPanelDicts[infoObject]);
+            currentInfoPanelDicts.Remove(infoObject);
         }
     }
-    public void RemoveCardButtonDialog(UICard uiCard)
-    {
-        if (currentButtonPanelDicts.ContainsKey(uiCard))
-        {
-            Destroy(currentButtonPanelDicts[uiCard]);
-            currentButtonPanelDicts.Remove(uiCard);
-        }
-    }
+
     public void CloseCurrentDialog()
     {
-        if(currentDialogPanelDicts.Count == 0) return;
-        foreach (var dialogPanel in currentDialogPanelDicts.Values)
+        if(currentInfoPanelDicts.Count == 0) return;
+        foreach (var dialogPanel in currentInfoPanelDicts.Values)
         {
             Destroy(dialogPanel);
         }
@@ -335,37 +308,6 @@ public class UIManager : MonoBehaviour
         AudioManager.Instance.PlaySound(AudioManager.AudioType.Gold);
         levelManager.GotoShop();
     }
-
-    /// <summary>
-    /// 显示特殊方块描述信息
-    /// </summary>
-    /// <param name="position"></param>
-    /// <param name="description"></param>
-    public void ShowCellDescription(Vector2 position,string description)
-    {
-        if (description == String.Empty)
-        {
-            return;
-        }
-        if (currentCellDescription != null)
-        {
-            Destroy(currentCellDescription);
-        }
-        Vector2 offset = new Vector2(1f,0f);
-        currentCellDescription = Instantiate(cellDescription, position+offset, Quaternion.identity);
-        currentCellDescription.GetComponent<CellDescription>().Init(description);
-        currentCellDescription.transform.SetParent(shopFrontCanvasTrans, true);
-        currentCellDescription.transform.localScale = Vector3.one;
-        StartCoroutine(ObjectAnimator.Instance.AnimateIn(currentCellDescription));
-    }
-    public void HideCellDescription()
-    {
-        if (currentCellDescription != null)
-        {
-            Destroy(currentCellDescription);
-        }
-    }
-    //显示规模\结构等级信息，颜色概率信息
 
     /// <summary>
     /// 显示规模\结构等级信息面板

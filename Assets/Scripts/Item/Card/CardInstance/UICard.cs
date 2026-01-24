@@ -8,24 +8,24 @@ using UnityEngine.UI;
 public class UICard : MonoBehaviour,
     IDragHandler, IBeginDragHandler, IEndDragHandler,
     IPointerEnterHandler, IPointerExitHandler,
-    IPointerClickHandler
+    IPointerClickHandler,ILayoutMember,IGood
 {
     private CardInstance cardInstance { get;set; }
     private UICardVisual cardVisual;
 
     [SerializeField]
     private CardData cardData;
-
-    //private SpriteRenderer spriteRenderer;
-    private Image image;
-
-    GameObject cardDialogPrefab;
-    GameObject cardDialog;
     public string CardName => cardData.cardName;
+    public string Description => cardData.effectDescription;
     public CardType Type => cardData.type;
     public Sprite CardImage => cardData.cardImage;
     public int Price => cardData.price;
     public int SellPrice => cardData.sellPrice;
+
+    public Transform Transform => transform;
+    public Transform CurrentSlot { get; set; }
+    public bool IsDragging { get => isDragging; set => isDragging = value; }
+    public LayoutSlotManager LayoutManager { get; set; }
 
     //private Coroutine wiggleCoroutine = null;
 
@@ -57,122 +57,46 @@ public class UICard : MonoBehaviour,
 
     private void Awake()
     {
-        //spriteObject = transform.GetChild(0);
-        //spriteRenderer = spriteObject.GetComponent<SpriteRenderer>();
-        image = GetComponent<Image>();
         rectTransform = GetComponent<RectTransform>();
         cardVisual = GetComponentInChildren<UICardVisual>();
         SetSelected(false);
     }
     private void Start()
     {
-        cardDialogPrefab = Resources.Load<GameObject>("Prefabs/UI/CardDialog");
     }
+    private void LateUpdate()
+    {
+        if (!isDragging && CurrentSlot != null)
+        {
+            transform.position=CurrentSlot.position;
+        }
+    }
+
     public void SetUp(CardInstance cardInstance)
     {
         this.cardInstance = cardInstance;
         this.cardData = cardInstance.cardData;
-        image.sprite=cardData.cardImage;
+        cardVisual.gameObject.GetComponent<Image>().sprite=cardData.cardImage;
         //spriteRenderer.sprite = cardData.cardImage;
         //defaultRotation = transform.rotation;
         //defaultScale = transform.localScale;
     }
-
-    //public void OnClicked()
-    //{
-    //    if (!isSelected)
-    //    {
-    //        transform.position+=new Vector3(0, 0.3f, 0);
-    //        isSelected = true;
-    //        Vector3 dialogPosition = this.transform.position + new Vector3(1, 0, -1);
-    //        UIManager.Instance.ShowCardButtonDialog(this, dialogPosition);
-    //    }
-    //    else if(isSelected)
-    //    {
-    //        DeSelected();
-    //    }
-    //}
-
-    //public void DeSelected()
-    //{
-    //    transform.position -= new Vector3(0, 0.3f, 0);
-    //    isSelected = false;
-    //    UIManager.Instance.RemoveCardInfoDialog(this);
-    //    UIManager.Instance.RemoveCardButtonDialog(this);
-    //}
-
-    //public void OnMouseEnter()
-    //{
-    //    transform.localScale *= 1.1f;
-    //    Vector3 dialogPosition = this.transform.position+new Vector3(2,0,-1);
-    //    UIManager.Instance.ShowCardInfoDialog(this, dialogPosition);
-    //}
-    //public void OnMouseExit()
-    //{
-    //    transform.localScale /= 1.1f;
-    //    //UIManager.Instance.RemoveCardInfoDialog(this);
-    //    if (isSelected) return;
-    //    UIManager.Instance.RemoveCardInfoDialog(this);
-    //    UIManager.Instance.RemoveCardButtonDialog(this);
-    //}
-
-    ///// <summary>
-    ///// 当设置新的Sprite时调用此方法来统一大小。
-    ///// </summary>
-    ///// <param name="newSprite">新的Sprite对象。</param>
-    //public void SetAndScaleSprite(Sprite newSprite)
-    //{
-    //    if (spriteRenderer == null) return;
-
-    //    // 1. 设置新的Sprite
-    //    spriteRenderer.sprite = newSprite;
-
-    //    if (newSprite == null)
-    //    {
-    //        // 如果Sprite为空，重置缩放
-    //        transform.localScale = Vector3.one;
-    //        return;
-    //    }
-
-    //    // 2. 获取当前Sprite在世界空间的尺寸 (bounds)
-    //    // 注意：bounds.size 基于 Sprite 的 Pixels Per Unit (PPU)
-    //    Vector3 currentSize = newSprite.bounds.size; // (width, height, depth)
-
-    //    // 3. 计算缩放比例
-    //    float scaleX = targetWidth / currentSize.x;
-    //    float scaleY = targetHeight / currentSize.y;
-
-    //    if (maintainAspectRatio)
-    //    {
-    //        // 保持纵横比，选择较小的缩放比例 (Fit) 或较大的缩放比例 (Fill)
-    //        // 这里我们选择较小的比例 (Fit) 以确保整个Sprite都可见
-    //        float uniformScale = Mathf.Min(scaleX, scaleY);
-
-    //        spriteObject.localScale = new Vector3(uniformScale, uniformScale, 1f);
-    //    }
-    //    else
-    //    {
-    //        // 不保持纵横比，直接拉伸
-    //        spriteObject.localScale = new Vector3(scaleX, scaleY, 1f);
-    //    }
-    //}
-
-    public CardInstance GetCardInstance()
+    public CardData GetCardData()
     {
-        return cardInstance;
+        return cardData;
     }
 
     public void OnBuy()
     {
-        if (Player.Instance.BuyCard(this))
+        if (Player.Instance.Buy(this))
         {
             isBought = true;
             ShopManager.Instance.RemoveCard(this);
             isSelected = false;
             cardInstance.cardData.OnAciquire();
             cardVisual.ResetVisuals();
-            UIManager.Instance.RemoveCardInfoDialog(this);
-            UIManager.Instance.RemoveCardButtonDialog(this);
+
+            UIManager.Instance.RemoveInfoPanel(this.transform);
         }
         else
         {
@@ -182,12 +106,10 @@ public class UICard : MonoBehaviour,
     }
     public void OnSell()
     {
-        Player.Instance.SellCard(this);
+        Player.Instance.Sell(this);
         cardInstance.cardData.OnSold();
-        UIManager.Instance.RemoveCardInfoDialog(this);
-        UIManager.Instance.RemoveCardButtonDialog(this);
-        Debug.Log("移除卡牌" + CardName);
-        Destroy(gameObject);
+        Debug.Log("出售卡牌" + CardName);
+        OnDestroyed();
     }
 
     public void OnDestroyed()
@@ -195,10 +117,17 @@ public class UICard : MonoBehaviour,
         Player.Instance.RemoveCard(this);
         cardInstance.cardData.OnDestory();
 
-        UIManager.Instance.RemoveCardInfoDialog(this);
-        UIManager.Instance.RemoveCardButtonDialog(this);
+        UIManager.Instance.RemoveInfoPanel(this.transform);
+        LayoutManager.RemoveMember(this);
         Debug.Log("移除卡牌" + CardName);
         Destroy(gameObject);
+    }
+
+    public void ChangeLayoutManager(LayoutSlotManager manager)
+    {
+        LayoutManager.RemoveMember(this);
+        LayoutManager = manager;
+        LayoutManager.AddMember(this);
     }
 
     public IEnumerator TryPlayAnimation(bool isBlocking,bool isLevelUp=false)
@@ -227,14 +156,17 @@ public class UICard : MonoBehaviour,
         PointerEnterEvent.Invoke(this);
 
         Vector3 dialogPosition = rectTransform.position+new Vector3(2,0,-1);
-        UIManager.Instance.ShowCardInfoDialog(this, dialogPosition);
+        InfoPanelConfig config=new InfoPanelConfig(CardName, Description, false);
+        UIManager.Instance.ShowInfoPanel(config,dialogPosition,this.transform);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         //if (isDragging) return; // 拖拽中不触发离开
-        UIManager.Instance.RemoveCardInfoDialog(this);
-        //UIManager.Instance.RemoveCardButtonDialog(this);
+        if (!isSelected)
+        {
+            UIManager.Instance.RemoveInfoPanel(this.transform);
+        }
 
         PointerExitEvent.Invoke(this);
     }
@@ -245,12 +177,16 @@ public class UICard : MonoBehaviour,
 
         // 触发 Player 单例中的选择逻辑
         // 假设 Player 单例有一个方法来处理卡牌选择/取消选择
-        Player.Instance.HandleCardClicked(this);
+        Player.Instance.HandleCardClicked(this.transform);
     }
 
     // 拖拽逻辑
     public void OnBeginDrag(PointerEventData eventData)
     {
+        if (isSelected)
+        {
+            isSelected = false;
+        }
         isDragging = true;
         BeginDragEvent.Invoke(this);
         // 在这里设置卡牌在拖拽时的层级（由 CardVisual.cs 处理）
@@ -258,12 +194,15 @@ public class UICard : MonoBehaviour,
 
     public void OnDrag(PointerEventData eventData)
     {
-        
+        Vector3 mousePosition=Camera.main.ScreenToWorldPoint(eventData.position);
+        transform.position= new Vector3(mousePosition.x,mousePosition.y);
+        LayoutManager.UpdateShadowPosition(this);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
         isDragging = false;
+        LayoutManager.FinishDragging(this);
         EndDragEvent.Invoke(this);
     }
 
@@ -276,13 +215,21 @@ public class UICard : MonoBehaviour,
 
         if (selected)
         {
-            Vector3 dialogPosition = rectTransform.position + new Vector3(0, -1, -1);
-            UIManager.Instance.ShowCardButtonDialog(this, dialogPosition);
+            Vector3 dialogPosition = rectTransform.position + new Vector3(2, 0, -1);
+            InfoPanelConfig config;
+            if (!isBought)
+            {
+                config = new InfoPanelConfig(CardName, Description, false, 1, Price);
+            }
+            else
+            {
+                config = new InfoPanelConfig(CardName, Description, false,2,SellPrice);
+            }
+            UIManager.Instance.ShowInfoPanel(config, dialogPosition, this.transform);
         }
         else
         {
-            UIManager.Instance.RemoveCardInfoDialog(this);
-            UIManager.Instance.RemoveCardButtonDialog(this);
+            UIManager.Instance.RemoveInfoPanel(this.transform);
         }
 
         SelectEvent.Invoke(this, selected);

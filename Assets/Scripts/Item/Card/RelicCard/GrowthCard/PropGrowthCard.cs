@@ -29,7 +29,7 @@ public class PropGrowthCard : RelicCardData,IBeforeCalculateScore,IOnUseProp,IGr
         }
     }
 
-    public bool OnUseProp(PropCardData cardData)
+    public bool OnUseProp(PropData cardData)
     {
         PropCardType cardType = cardData.cardType;
         Debug.Log(cardName + "´¥·¢£¬value£º" + value);

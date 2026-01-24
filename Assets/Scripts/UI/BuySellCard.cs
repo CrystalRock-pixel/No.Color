@@ -12,24 +12,24 @@ public class BuySellCard : MonoBehaviour
 
     public UICard uiCard;
 
-    private void SetUp(CardInstance cardInstance, bool isBought)
+    private void SetUp(CardData cardInstance, bool isBought)
     {
         if (isBought)
         {
-            priceText.text = "$" + cardInstance.cardData.sellPrice.ToString();
+            priceText.text = "$" + cardInstance.sellPrice.ToString();
             buyButton.gameObject.SetActive(false);
             sellButton.gameObject.SetActive(true);
         }
         else
         {
-            priceText.text = "$" + cardInstance.cardData.price.ToString();
+            priceText.text = "$" + cardInstance.price.ToString();
             buyButton.gameObject.SetActive(true);
             sellButton.gameObject.SetActive(false);
         }
     }
     public void SetUp(UICard uiCard)
     {
-        SetUp(uiCard.GetCardInstance(), uiCard.isBought);
+        SetUp(uiCard.GetCardData(), uiCard.isBought);
         this.uiCard = uiCard;
     }
 

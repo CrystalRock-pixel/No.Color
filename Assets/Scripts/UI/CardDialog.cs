@@ -14,9 +14,9 @@ public class CardDialog : MonoBehaviour
         cardDescription.text = description;
     }
 
-    public void SetCardInfo(CardInstance card)
+    public void SetCardInfo(CardData card)
     {
-        cardName.text = card.cardData.cardName;
-        cardDescription.text = card.cardData.effectDescription;
+        cardName.text = card.cardName;
+        cardDescription.text = card.effectDescription;
     }
 }

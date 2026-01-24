@@ -9,6 +9,7 @@ public class ChipsCell : ColorCell
     {
         base.Init(colorType, cellType);
         baseChips += extraChips;
-        description = $"筹码格 \n 获得{extraChips}点额外筹码";
+        cellName= "筹码块";
+        description = $"获得{extraChips}点额外筹码";
     }
 }

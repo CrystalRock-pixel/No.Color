@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public enum ColorType
 {
@@ -17,8 +18,9 @@ public enum CellType
     Normal,
     Effect,
 }
-public class ColorCell : MonoBehaviour
+public class ColorCell : MonoBehaviour,IPointerEnterHandler,IPointerExitHandler,IPointerClickHandler
 {
+    public string cellName;
     public ColorType colorType;
     public Vector2 location;
     public GridManager gridManager;
@@ -59,13 +61,35 @@ public class ColorCell : MonoBehaviour
         return Mathf.RoundToInt(baseChips);
     }
 
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        Player.Instance.OnMouseCellHover(this);
+        MouseEnter();
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        Player.Instance.OnMouseCellHover(null);
+        MouseExit();
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if(eventData.button==PointerEventData.InputButton.Left)
+             Player.Instance.OnMouseClickCell(this);
+        else if(eventData.button==PointerEventData.InputButton.Right)
+            Player.Instance.OnMouseRightClickCell(this);
+    }
+
     public void MouseEnter()
     {
-        UIManager.Instance.ShowCellDescription(transform.position, description);
+        InfoPanelConfig config = new InfoPanelConfig(cellName, description, false);
+        Vector3 position = transform.position + new Vector3(2, 0, 0);
+        UIManager.Instance.ShowInfoPanel(config,position,this.transform);
     }
     public void MouseExit()
     {
-        UIManager.Instance.HideCellDescription();
+        UIManager.Instance.RemoveInfoPanel(this.transform);
     }
 
     public IEnumerator BeSelected()
@@ -88,7 +112,7 @@ public class ColorCell : MonoBehaviour
     public virtual void OnDestoryed()
     {
         EffectManager.Instance.PlayFlowTextEffect(GetChips().ToString(), transform.position, FlowTextType.AddChips);
-        UIManager.Instance.HideCellDescription();
+        UIManager.Instance.RemoveInfoPanel(this.transform);
     }
 
     public void DisplayTempColor(ColorType colorType)

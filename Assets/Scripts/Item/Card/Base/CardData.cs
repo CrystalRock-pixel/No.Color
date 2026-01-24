@@ -23,8 +23,6 @@ public class CardData : ScriptableObject
     public Sprite cardImage;
     public int price;
     public int sellPrice => (int)(price * 0.5f);
-
-    protected ScoreManager ScoreManager => ScoreManager.Instance;
     public virtual void OnAciquire()
     {
         Debug.Log("Acquired " + cardName);
@@ -40,26 +38,35 @@ public class CardData : ScriptableObject
 
     }
 }
-
+/// <summary>
+/// 卡牌触发：计算分数时触发
+/// </summary>
 public interface IOnCalculateScore
 {
     bool OnCalculateScore(ClearGeneralParameters paras);
 }
+
+/// <summary>
+/// 卡牌触发：计算分数前触发
+/// </summary>
 public interface IBeforeCalculateScore
 {
     bool BeforeCalculateScore(ClearGeneralParameters paras);
 }
 
+/// <summary>
+/// 卡牌触发：计算分数后触发
+/// </summary>
+
 public interface IAfterCalculateScore
 {
     bool AfterCalculateScore(ClearGeneralParameters paras);
 }
-public interface IOnUseCard
-{
-    void OnUseCard();
-}
 
+/// <summary>
+/// 卡牌触发：使用道具时触发
+/// </summary>
 public interface IOnUseProp
 {
-    bool OnUseProp(PropCardData cardData);
+    bool OnUseProp(PropData cardData);
 }

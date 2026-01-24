@@ -8,7 +8,8 @@ public class MagnifactionCell : ColorCell
     public override void Init(ColorType colorType, CellType cellType = CellType.Normal)
     {
         base.Init(colorType, cellType);
-        description = $"倍率格 \n 获得{extraMagnification}点额外倍率";
+        cellName= "倍率块";
+        description = $"获得{extraMagnification}点额外倍率";
     }
     public override void OnDestoryed()
     {

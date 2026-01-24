@@ -145,12 +145,17 @@ public class LevelManager : MonoBehaviour
 
     public void SettleBonus()
     {
+        int totalGold = GetTotalMoney();
+        Player.Instance.AddMoney(totalGold);
+    }
+    public int GetTotalMoney()
+    {
         int totalGold = 0;
         foreach (var item in settlementGoldCompoent.Values)
         {
             totalGold += item;
         }
-        Player.Instance.AddMoney(totalGold);
+        return totalGold;
     }
     private void RefreshSettlementGoldDicts()
     {

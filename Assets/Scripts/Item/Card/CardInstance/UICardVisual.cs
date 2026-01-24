@@ -5,10 +5,9 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UICardVisual : MonoBehaviour
+public class UICardVisual : SmoothFollowVisual
 {
     private UICard parentCard;
-    private RectTransform visualRect;
     private Canvas canvas; // 用于层级管理
 
     [Header("位置参数")]
@@ -23,17 +22,23 @@ public class UICardVisual : MonoBehaviour
     [SerializeField] private float scaleTransitionDuration = 0.15f;
     [SerializeField] private Ease scaleEase = Ease.OutQuad; // 使用平滑的缓动函数
 
-    [Header("动画参数 (从 UICard 迁移)")]
+    [Header("动画参数")]
     [Tooltip("摇摆/冲击动画的总时长")]
     [SerializeField] private float wiggleDuration = 0.3f;
     private Vector3 defaultScale;
     private Coroutine wiggleCoroutine = null;
 
-    private void Awake()
+    [Header("卡牌动态倾斜")]
+    [SerializeField] private float tiltSensitivity = 1.5f; // 倾斜灵敏度
+    [SerializeField] private float maxTiltAngle = 20f;     // 最大倾斜角度
+    [SerializeField] private float tiltSmoothSpeed = 10f;  // 倾斜恢复平滑度
+    private float _currentTiltAngle; // 当前累积的倾斜角度
+
+    protected override void Awake()
     {
+        base.Awake();
         // 确保它挂载在子对象上，父对象上有 UICard 脚本
         parentCard = GetComponentInParent<UICard>();
-        visualRect = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
 
         // --- 订阅事件 (核心解耦) ---
@@ -43,14 +48,35 @@ public class UICardVisual : MonoBehaviour
         parentCard.EndDragEvent.AddListener(HandleEndDrag);
         parentCard.SelectEvent.AddListener(HandleSelect);
 
-        defaultScale = transform.localScale;    
+        defaultScale = base.transform.localScale;    
     }
 
-    private void Update()
+    protected override void Start()
     {
-        // 实现平滑跟随：让 Visual 对象的 RectTransform 平滑地追随父级 Card 的位置
-        // visualRect.position = Vector3.Lerp(visualRect.position, parentCard.transform.position, followSpeed * Time.deltaTime);
-        // visualRect.rotation = Quaternion.Slerp(visualRect.rotation, parentCard.transform.rotation, followSpeed * Time.deltaTime);
+        base.Start();
+    }
+
+    protected override void LateUpdate()
+    {
+        if (parentCard.isSelected) return;
+        //计算这一帧的旋转增量
+        Vector3 parentDelta = parentTransform.position - lastParentPosition;
+
+        // 计算目标倾斜角 (基于水平速度)
+        float targetTilt = -parentDelta.x * tiltSensitivity / Time.deltaTime;
+        targetTilt = Mathf.Clamp(targetTilt, -maxTiltAngle, maxTiltAngle);
+
+        // 平滑角度变化
+        _currentTiltAngle = Mathf.Lerp(_currentTiltAngle, targetTilt, followSpeed * Time.deltaTime);
+
+        // 2. 调用基类处理位移补偿和跟随
+        // 注意：基类里会更新 lastParentPosition，所以计算旋转要在 base.LateUpdate 之前
+        base.LateUpdate();
+
+        // 3. 应用最终旋转
+        // 将动态倾斜叠加在父物体的原始旋转上
+        Quaternion tiltRotation = Quaternion.Euler(0, 0, _currentTiltAngle);
+        transform.rotation = Quaternion.Slerp(transform.rotation, parentTransform.rotation * tiltRotation, followSpeed * Time.deltaTime);
     }
 
     /// <summary>
@@ -59,8 +85,8 @@ public class UICardVisual : MonoBehaviour
     private void HandlePointerEnter(UICard card)
     {
         // 停止任何正在进行的缩放动画，并执行放大
-        visualRect.DOKill(true);
-        visualRect.DOScale(defaultScale * scaleOnHover, scaleTransitionDuration).SetEase(scaleEase);
+        transform.DOKill(true);
+        transform.DOScale(defaultScale * scaleOnHover, scaleTransitionDuration).SetEase(scaleEase);
     }
 
     /// <summary>
@@ -71,8 +97,8 @@ public class UICardVisual : MonoBehaviour
         // 只有在卡牌未被选中的情况下才恢复原始缩放
         if (!card.isSelected)
         {
-            visualRect.DOKill(true);
-            visualRect.DOScale(defaultScale, scaleTransitionDuration).SetEase(scaleEase);
+            transform.DOKill(true);
+            transform.DOScale(defaultScale, scaleTransitionDuration).SetEase(scaleEase);
         }
     }
 
@@ -85,18 +111,18 @@ public class UICardVisual : MonoBehaviour
         if (isSelected)
         {
             // 选中时向上偏移，并播放冲击动画
-            visualRect.DOLocalMoveY(selectionOffset, positionTransitionDuration).SetEase(Ease.OutBack);
-            visualRect.DOPunchRotation(new Vector3(0, 0, 10), 0.8f, 15, 0.8f);
+            transform.DOLocalMoveY(selectionOffset, positionTransitionDuration).SetEase(Ease.OutBack);
+            transform.DOPunchRotation(new Vector3(0, 0, 10), 0.8f, 15, 0.8f);
         }
         else
         {
             // 取消选中时恢复到本地坐标 (0, 0, 0)
-            visualRect.DOLocalMoveY(0f, positionTransitionDuration).SetEase(Ease.OutQuad);
+            transform.DOLocalMoveY(0f, positionTransitionDuration).SetEase(Ease.OutQuad);
 
             // 如果未被拖拽，并且不在悬停状态，恢复缩放
-            if (!card.isDragging && !card.GetComponent<Image>().IsActive())
+            if (!card.isDragging)
             {
-                visualRect.DOScale(defaultScale, scaleTransitionDuration).SetEase(scaleEase);
+                transform.DOScale(defaultScale, scaleTransitionDuration).SetEase(scaleEase);
             }
         }
     }
@@ -107,7 +133,7 @@ public class UICardVisual : MonoBehaviour
     private void HandleBeginDrag(UICard card)
     {
         // 1. 放大一点点
-        visualRect.DOScale(defaultScale * 1.2f, scaleTransitionDuration).SetEase(scaleEase);
+        transform.DOScale(defaultScale * 1.2f, scaleTransitionDuration).SetEase(scaleEase);
 
         // 2. 利用 Canvas 的 overrideSorting 确保被拖拽的卡牌在最上层
         if (canvas != null)
@@ -127,7 +153,7 @@ public class UICardVisual : MonoBehaviour
         // 1. 恢复到悬停或默认大小（取决于是否选中）
         if (!card.isSelected)
         {
-            visualRect.DOScale(defaultScale, scaleTransitionDuration).SetEase(scaleEase);
+            transform.DOScale(defaultScale, scaleTransitionDuration).SetEase(scaleEase);
         }
 
         // 2. 恢复 Canvas Sorting
@@ -195,7 +221,7 @@ public class UICardVisual : MonoBehaviour
             float zAngle = magnitude * dampening * oscillation * initialAngleOffset;
 
             // 围绕自身的Z轴旋转
-            transform.localRotation = Quaternion.Euler(0, 0, zAngle);
+            base.transform.localRotation = Quaternion.Euler(0, 0, zAngle);
 
             // B. 缩放冲击
             float currentScale = 1f;
@@ -220,7 +246,7 @@ public class UICardVisual : MonoBehaviour
                 currentScale = Mathf.Lerp(1.2f, 1.0f, progress);
             }
 
-            transform.localScale = defaultScale * currentScale;
+            base.transform.localScale = defaultScale * currentScale;
 
             yield return null;
         }
@@ -243,10 +269,10 @@ public class UICardVisual : MonoBehaviour
             wiggleCoroutine = null;
         }
         // 停止所有 DOTween 动画
-        visualRect.DOKill();
+        transform.DOKill();
 
-        visualRect.localScale = defaultScale;
-        visualRect.localRotation = Quaternion.identity;
-        transform.localPosition = Vector3.zero;
+        transform.localScale = defaultScale;
+        transform.localRotation = Quaternion.identity;
+        base.transform.localPosition = Vector3.zero;
     }
 }
