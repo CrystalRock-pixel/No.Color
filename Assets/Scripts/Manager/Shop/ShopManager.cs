@@ -19,8 +19,8 @@ public class ShopManager : MonoBehaviour
     public Transform goodsGroup;
     public float relicCardPanelPadding = 0.5f;
     public float propCardPanelPadding = 0.5f;
-    public List<GameObject> relicCards = new List<GameObject>();
-    public List<GameObject> propCards = new List<GameObject>();
+    public List<GameObject> cards = new List<GameObject>();
+    public List<GameObject> prop = new List<GameObject>();
 
     public LayoutSlotManager CardLayoutManager;
     public LayoutSlotManager PropLayoutManager;
@@ -48,27 +48,27 @@ public class ShopManager : MonoBehaviour
     public void CloseShop()
     {
         UIManager.Instance.CloseShop();
-        foreach (GameObject card in relicCards)
+        foreach (GameObject card in cards)
         {
             Destroy(card);
         }
-        relicCards.Clear();
-        foreach(GameObject card in propCards)
+        cards.Clear();
+        foreach(GameObject card in prop)
         {
             Destroy(card);
         }
-        propCards.Clear();
+        prop.Clear();
     }
 
     private void InitShop()
     {
         for (int i = 0; i < relicCardCount; i++)
         {
-            AddRelicCard(resourcesManager.GetOneRandomRelicCard());
+            AddCard(resourcesManager.GetOneRandomRelicCard());
         }
         for (int i = 0;i < propCardCount; i++)
         {
-            AddPropCard(resourcesManager.GetOneRandomPropCard());
+            AddProp(resourcesManager.GetOneRandomPropCard());
         }
 
         InitLayout();
@@ -76,33 +76,53 @@ public class ShopManager : MonoBehaviour
 
     private void InitLayout()
     {
-        CardLayoutManager.Init(relicCards.Select(card=>card.GetComponent<ILayoutMember>()).ToList());
-        PropLayoutManager.Init(propCards.Select(prop => prop.GetComponent<ILayoutMember>()).ToList());
+        CardLayoutManager.Init(cards.Select(card=>card.GetComponent<ILayoutMember>()).ToList());
+        PropLayoutManager.Init(prop.Select(prop => prop.GetComponent<ILayoutMember>()).ToList());
     }
 
-    public void RemoveCard(UICard card)
+    public void RemoveCard(IGood good)
     {
-        CardType cardType = card.GetCardData().type;
-        if (cardType == CardType.Relic)
+        if (cards.Select(card=>card.GetComponent<IGood>()).Contains(good))
         {
-            relicCards.Remove(card.gameObject);
+            cards.Remove(good.Transform.gameObject);
         }
-        else if (cardType == CardType.Prop)
+        else if (prop.Select(prop => prop.GetComponent<IGood>()).Contains(good))
         {
-            propCards.Remove(card.gameObject);
+            prop.Remove(good.Transform.gameObject);
+        }
+        else
+        {
+            Debug.Log("错误：商店中没有该物品"+good.Transform.name);
         }
     }
 
-    public void AddRelicCard(GameObject newCard)
+    public void AddGood(IGood good)
     {
-        relicCards.Add(newCard);
+        if (good is UICard)
+        {
+            UICard uiCard=good as UICard;
+            AddCard(good.Transform.gameObject);
+        }
+        else if (good is UIProp)
+        {
+            AddProp(good.Transform.gameObject);
+        }
+        else
+        {
+            Debug.Log("错误：无法添加该物品，未知的商品类型" + good.Transform.name);
+        }
+    }
+
+    private void AddCard(GameObject newCard)
+    {
+        cards.Add(newCard);
         newCard.transform.SetParent(goodsGroup);
         newCard.transform.localScale = Vector3.one;
         //RepositionCards(relicCardPanel,relicCards,relicCardPanelPadding);
     }
-    public void AddPropCard(GameObject newPropCard)
+    private void AddProp(GameObject newPropCard)
     {
-        propCards.Add(newPropCard);
+        prop.Add(newPropCard);
         newPropCard.transform.SetParent(goodsGroup);
         newPropCard.transform.localScale = Vector3.one;
         //RepositionCards(propCardPanel,propCards,propCardPanelPadding);

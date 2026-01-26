@@ -109,9 +109,13 @@ public class ColorCell : MonoBehaviour,IPointerEnterHandler,IPointerExitHandler,
         transform.localScale = Vector3.one*0.9f;
     }
 
-    public virtual void OnDestoryed()
+    public virtual void OnCleared()
     {
         EffectManager.Instance.PlayFlowTextEffect(GetChips().ToString(), transform.position, FlowTextType.AddChips);
+        OnDestoryed();
+    }
+    public virtual void OnDestoryed()
+    {
         UIManager.Instance.RemoveInfoPanel(this.transform);
     }
 

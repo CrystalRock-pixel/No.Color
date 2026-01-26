@@ -55,6 +55,7 @@ public class UICard : MonoBehaviour,
 
     private RectTransform rectTransform; // 用于UI操作
 
+    private GameObject shadow;
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -70,6 +71,10 @@ public class UICard : MonoBehaviour,
         {
             transform.position=CurrentSlot.position;
         }
+        if(isDragging&&shadow != null)
+        {
+            shadow.transform.localPosition=cardVisual.transform.localPosition+new Vector3(50f,-50f);
+        }
     }
 
     public void SetUp(CardInstance cardInstance)
@@ -77,6 +82,7 @@ public class UICard : MonoBehaviour,
         this.cardInstance = cardInstance;
         this.cardData = cardInstance.cardData;
         cardVisual.gameObject.GetComponent<Image>().sprite=cardData.cardImage;
+        cardVisual.gameObject.GetComponent<Image>().SetNativeSize();
         //spriteRenderer.sprite = cardData.cardImage;
         //defaultRotation = transform.rotation;
         //defaultScale = transform.localScale;
@@ -162,7 +168,7 @@ public class UICard : MonoBehaviour,
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        //if (isDragging) return; // 拖拽中不触发离开
+        if (isDragging) return; // 拖拽中不触发离开
         if (!isSelected)
         {
             UIManager.Instance.RemoveInfoPanel(this.transform);
@@ -189,7 +195,8 @@ public class UICard : MonoBehaviour,
         }
         isDragging = true;
         BeginDragEvent.Invoke(this);
-        // 在这里设置卡牌在拖拽时的层级（由 CardVisual.cs 处理）
+
+        ShowShadow();
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -204,6 +211,11 @@ public class UICard : MonoBehaviour,
         isDragging = false;
         LayoutManager.FinishDragging(this);
         EndDragEvent.Invoke(this);
+
+        if (shadow != null)
+        {
+            shadow.gameObject.SetActive(false);
+        }
     }
 
     // 新增方法：由 Player 单例调用来设置卡牌的选中状态
@@ -241,5 +253,20 @@ public class UICard : MonoBehaviour,
         CardData cardData = cardInstance.cardData;
         UnityEngine.Object.Destroy(cardData);
         cardInstance.cardData = null;
+        UIManager.Instance.RemoveInfoPanel(this.transform);
+    }
+
+    private void ShowShadow()
+    {
+        if (shadow == null)
+        {
+            shadow = ResourcesManager.Instance.GetShadow(transform, cardVisual.transform.GetComponent<Image>().sprite);
+            shadow.transform.SetSiblingIndex(0);
+            shadow.transform.localPosition = new Vector3(50f, -50f);
+        }
+        else
+        {
+            shadow.gameObject.SetActive(true);
+        }
     }
 }

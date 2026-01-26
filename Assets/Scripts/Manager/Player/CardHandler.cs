@@ -23,7 +23,6 @@ public class CardHandler : MonoBehaviour
     public Player player => Player.Instance;
 
     public List<UICard> cards =new List<UICard>();
-    public List<UICard> props =new List<UICard>();
     public static Action<PropData> OnUseProp;
 
     private void Awake()
@@ -41,25 +40,11 @@ public class CardHandler : MonoBehaviour
 
     public void AddCard(UICard cardInstance)
     {
-        if(cardInstance.GetCardData() is PropData)
-        {
-            props.Add(cardInstance);
-        }
-        else
-        {
-            cards.Add(cardInstance);
-        }
+        cards.Add(cardInstance);
     }
     public void RemoveCard(UICard cardInstance)
     {
-        if (cardInstance.GetCardData() is PropData)
-        {
-            props.Remove(cardInstance);
-        }
-        else
-        {
-            cards.Remove(cardInstance);
-        }
+        cards.Remove(cardInstance);
     }
     public void SoldCard(UICard cardInstance)
     {

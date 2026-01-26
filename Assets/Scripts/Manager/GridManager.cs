@@ -100,9 +100,10 @@ public class GridManager : MonoBehaviour
 
     public void ClearMap()
     {
-        foreach (ColorCell grid in colorCellList)
+        foreach (ColorCell cell in colorCellList)
         {
-            Destroy(grid.gameObject);
+            cell.OnDestoryed();
+            Destroy(cell.gameObject);
         }
         colorCellList.Clear();
     }
@@ -231,10 +232,10 @@ public class GridManager : MonoBehaviour
         return cellsToDestroy;
     }
 
-    public void DestroyCell(ColorCell cell)
+    public void ClearCell(ColorCell cell)
     {
         colorCellList.Remove(cell);
-        cell.OnDestoryed();
+        cell.OnCleared();
         Destroy(cell.gameObject);
     }
 

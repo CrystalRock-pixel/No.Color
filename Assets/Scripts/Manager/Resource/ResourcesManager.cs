@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 public class ResourcesManager : MonoBehaviour
 {
@@ -23,6 +23,8 @@ public class ResourcesManager : MonoBehaviour
     public Dictionary<string, PropData> propsDict = new Dictionary<string, PropData>();
     public Dictionary<string, EnemyBase> enemyDict = new Dictionary<string, EnemyBase>();
 
+    private GameObject shadowPrefab;
+    private GameObject shadowUIPrefab;
     private GameObject uiCardPrefab;
     private GameObject uiPropPrefab;
     private GameObject colorGridPrefab;
@@ -35,6 +37,9 @@ public class ResourcesManager : MonoBehaviour
     public Sprite greenCellSprite;
     public Sprite blueCellSprite;
     public Sprite yellowCellSprite;
+
+    [Header(" 材质")]
+    public Material outlineMat;
 
     [Header("特殊格子模块")]
     public float baseSpecialCellsProbabilities = 0.1f;
@@ -64,9 +69,11 @@ public class ResourcesManager : MonoBehaviour
         cardsList = Resources.LoadAll<CardData>("SOAssets/Card").ToList();
         propsList = Resources.LoadAll<PropData>("SOAssets/Prop").ToList();
         enemyList = Resources.LoadAll<EnemyBase>("EnemyAssets").ToList();
-        uiCardPrefab = Resources.Load<GameObject>("Prefabs/GameObject/NewUICard");
-        uiPropPrefab = Resources.Load<GameObject>("Prefabs/GameObject/NewUIProp");
+        uiCardPrefab = Resources.Load<GameObject>("Prefabs/Card/NewUICard");
+        uiPropPrefab = Resources.Load<GameObject>("Prefabs/Prop/NewUIProp");
         colorGridPrefab = Resources.Load<GameObject>("Prefabs/ColorCell");
+        shadowPrefab = Resources.Load<GameObject>("Prefabs/Other/Shadow");
+        shadowUIPrefab = Resources.Load<GameObject>("Prefabs/Other/Shadow(UI)");
     }
 
     private void Start()
@@ -186,6 +193,24 @@ public class ResourcesManager : MonoBehaviour
         enemy.UnsubscribeFromEvents();
         //Destory
     }
+    public GameObject GetShadow(Transform transform,Sprite shadowSprite,bool isUI=true)
+    {
+        GameObject prefab = shadowUIPrefab;
+        if(!isUI)
+        {
+            prefab = shadowPrefab;
+        }
+        GameObject shadow=Instantiate(prefab, transform);
+        if (!isUI)
+        {
+            shadow.GetComponent<SpriteRenderer>().sprite = shadowSprite;
+            return shadow;
+        }
+        Image image= shadow.GetComponent<Image>();
+        image.sprite = shadowSprite;
+        image.SetNativeSize();
+        return shadow;
+    }
 
     public GameObject GetClearCellEffect()
     {
@@ -198,6 +223,15 @@ public class ResourcesManager : MonoBehaviour
         GameObject flowTextObject = Instantiate(flowTextEffect);
         flowTextObject.name = flowTextEffect.name + "_Instance";
         return flowTextObject;
+    }
+
+    public Material GetMaterial(string materialName)
+    {
+        if (materialName == "Outline")
+        {
+            return outlineMat;
+        }
+        return null;
     }
 
 

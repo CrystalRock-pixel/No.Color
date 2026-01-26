@@ -10,6 +10,9 @@ public class Player : MonoBehaviour
 {
     public static Player Instance { get; private set; }
     private CardHandler cardHandler;
+    private PropHandler propHandler;
+
+
     private GridManager gridManager;
     private ScoreManager scoreManager;
     private ShopManager shopManager;
@@ -47,7 +50,10 @@ public class Player : MonoBehaviour
     }
     private void Start()
     {
-        cardHandler = CardHandler.Instance;
+        cardHandler = GetComponent<CardHandler>();
+        propHandler=GetComponent<PropHandler>();
+
+
         gridManager = GridManager.Instance;
         scoreManager = ScoreManager.Instance;
         shopManager = ShopManager.Instance;
@@ -70,19 +76,12 @@ public class Player : MonoBehaviour
     }
     public void OnMouseCellHover(ColorCell cell)
     {
-        //if (IsPointerOverUIObject())
-        //{
-        //    // 如果鼠标悬停在 UI 上，但之前悬停在 ColorCell 上，需要清除 ColorCell 的状态
         if (currentHoveredCell != cell||currentHoveredCell==null)
         {
             currentHoveredCell = null;
             clearSequenceService.ClearPrediction();
         }
-        //    return; 
-        //}
-
         currentHoveredCell = cell;
-
         if (currentHoveredCell != null)
         {
             clearSequenceService.StartClearReadyFlow(currentHoveredCell.location, currentHoveredCell.colorType);
@@ -148,26 +147,6 @@ public class Player : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 检查当前鼠标位置是否悬停在任何 Unity UI (UGUI) 元素上。
-    /// </summary>
-    private bool IsPointerOverUIObject()
-    {
-        // 获取当前 EventSystem 实例
-        PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
-        // 设置事件数据，使用当前鼠标位置
-        eventDataCurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-
-        // 创建一个列表来存储射线检测结果
-        List<RaycastResult> results = new List<RaycastResult>();
-
-        // 使用 EventSystem 的 Raycaster 对 UI 进行射线检测
-        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
-
-        // 如果 results 列表不为空，说明射线击中了 UI 元素
-        return results.Count > 0;
-    }
-
     public bool Buy(IGood good)
     {
         if (Money >= good.Price)
@@ -176,7 +155,7 @@ public class Player : MonoBehaviour
             UICard uiCard = good.Transform.GetComponent<UICard>();
             if (uiCard != null)
             {
-                AddCard(uiCard);
+                AddGood(uiCard);
                 currentSelectedCard = null;
             }
             return true;
@@ -188,11 +167,18 @@ public class Player : MonoBehaviour
         }
     }
 
-    public void AddCard(UICard uiCard)
+    public void AddGood(IGood good)
     {
-        uiCard.transform.SetParent(GoodsGroup, false);
-        uiCard.ChangeLayoutManager(cardSlotManager);
-        cardHandler.AddCard(uiCard);
+        if (good is UICard uiCard)
+        {
+            uiCard.transform.SetParent(GoodsGroup, false);
+            uiCard.ChangeLayoutManager(cardSlotManager);
+            cardHandler.AddCard(uiCard);
+        }
+        else if(good is UIProp uiProp)
+        {
+            propHandler.AddProp(uiProp);
+        }
     }
     public void Sell(IGood good)
     {

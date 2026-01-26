@@ -30,6 +30,13 @@ public class InfoPanel : MonoBehaviour
     [SerializeField] private GameObject buysellButtonPrefab;
     [SerializeField] private GameObject useButtonPrefab;
 
+    private Vector3 posOffset;
+
+    private void LateUpdate()
+    {
+        transform.position = posOffset+infoObject.position;
+    }
+
     public void Init(InfoPanelConfig config, Transform infoObject)
     {
         this.infoObject = infoObject;
@@ -65,6 +72,8 @@ public class InfoPanel : MonoBehaviour
             Button button = useButtonObject.GetComponent<Button>();
             button.onClick.AddListener(OnUse);
         }
+
+        posOffset = transform.position - infoObject.position;
     }
 
     private void OnBuy()

@@ -149,7 +149,7 @@ public class ClearSequenceService : MonoBehaviour
             yield return ObjectAnimator.Instance.AnimateObjectBreak(cell.gameObject, duration: cellClearDelay);
 
             // 从地图中移除和销毁单元格 (GridManager 的职责)
-            GridManager.DestroyCell(cell);
+            GridManager.ClearCell(cell);
 
             //yield return new WaitForSeconds(cellClearDelay);
         }
