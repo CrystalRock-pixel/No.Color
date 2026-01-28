@@ -131,8 +131,10 @@ public class UIManager : MonoBehaviour
     {
         if (currentInfoPanelDicts.ContainsKey(infoObject))
         {
-            Destroy(currentInfoPanelDicts[infoObject]);
-            currentInfoPanelDicts.Remove(infoObject);
+            //Destroy(currentInfoPanelDicts[infoObject]);
+            //currentInfoPanelDicts.Remove(infoObject);
+            currentInfoPanelDicts[infoObject].GetComponent<InfoPanel>().Init(config, infoObject);
+            return;
         }
 
         GameObject infoPanel=Instantiate(infoPanelPrefab, position, Quaternion.identity);

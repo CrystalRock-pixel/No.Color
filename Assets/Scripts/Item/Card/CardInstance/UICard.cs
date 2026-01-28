@@ -163,7 +163,11 @@ public class UICard : MonoBehaviour,
 
         Vector3 dialogPosition = rectTransform.position+new Vector3(2,0,-1);
         InfoPanelConfig config=new InfoPanelConfig(CardName, Description, false);
-        UIManager.Instance.ShowInfoPanel(config,dialogPosition,this.transform);
+
+        if (!isSelected)
+        {
+            UIManager.Instance.ShowInfoPanel(config, dialogPosition, this.transform);
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -182,8 +186,7 @@ public class UICard : MonoBehaviour,
         if (isDragging) return; // 拖拽结束后不触发点击
 
         // 触发 Player 单例中的选择逻辑
-        // 假设 Player 单例有一个方法来处理卡牌选择/取消选择
-        Player.Instance.HandleCardClicked(this.transform);
+        Player.Instance.HandleClicked(this.transform);
     }
 
     // 拖拽逻辑

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   propName: "\u7EFF\u8272\u67D3\u6599"
   effectDescription: "\u7EFF\u8272\u51FA\u73B0\u6982\u7387\u63D0\u9AD810%"
-  propImage: {fileID: 21300000, guid: d0a92ad53bf1e994fba5090d7991c219, type: 3}
+  propImage: {fileID: 21300000, guid: 245e563556a9ae84196646b69b43ecff, type: 3}
   price: 4
   cardType: 3
   comboScale: 0

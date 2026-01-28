@@ -16,6 +16,8 @@ public class ClearSequenceService : MonoBehaviour
     private Coroutine clearRoutine;
     private Coroutine switchColorRoutine;
 
+    [SerializeField] private Coroutine _delayStopTimer;  // 用于延迟停止预备消除协程的计时器
+
     public bool isClearing => clearRoutine != null;
     private void Awake()
     {
@@ -30,27 +32,28 @@ public class ClearSequenceService : MonoBehaviour
         }
     }
 
+    #region 预测消除流程
+
     /// <summary>
-    /// 对外暴露的启动消除流程的接口。
+    /// 对外暴露的启动预备消除流程的接口。
     /// </summary>
-    public void StartClearFlow(Vector2 startLocation, ColorType targetColor)
+    /// <param name="cell"></param>
+    public void StartClearReadyFlow(ColorCell cell)
     {
-        if (clearRoutine != null) return;
-        // 1. 获取要清除的单元格列表 (调用 GridManager 的只读方法)
-        List<ColorCell> cellsToClear = GridManager.GetCellsToClear(startLocation, targetColor);
-        if (readyClearRoutine != null)
+        if (cell == null)
         {
-            StopCoroutine(readyClearRoutine);
-            readyClearRoutine = null;
+            StartDelayClearPrediction();
+            return;
         }
-        clearRoutine= StartCoroutine(ClearFlowCoroutine(cellsToClear));
-    }
 
-    public void StartClearReadyFlow(Vector2 startLocation, ColorType targetColor)
-    {
+        StopDelayClearPrediction();
+
+        Vector2 startLocation=cell.location;
+        ColorType targetColor = cell.colorType;
         if (clearRoutine != null) return;
 
         List<ColorCell> cellsToClear = GridManager.GetCellsToClear(startLocation, targetColor);
+
         if (cellsToClear.Count == currentSelectColorCells.Count &&
             cellsToClear.All(currentSelectColorCells.Contains))
         {
@@ -61,7 +64,53 @@ public class ClearSequenceService : MonoBehaviour
             StopCoroutine(readyClearRoutine);
             readyClearRoutine = null;
         }
+        ClearPrediction();
         readyClearRoutine = StartCoroutine(ReadyClearCoroutine(cellsToClear));
+    }
+
+    ///<summary>
+    ///第一下点击的预备消除协程
+    /// </summary>
+    private IEnumerator ReadyClearCoroutine(List<ColorCell> cellsToClear)
+    {
+        currentSelectColorCells = cellsToClear;
+        ScoreManager.Instance.PredictCombo(cellsToClear);
+
+        foreach (ColorCell cell in cellsToClear.OrderBy(c => c.location.x))
+        {
+            //调用单元格被选中协程
+            yield return cell.BeSelected();
+        }
+    }
+
+    private void StartDelayClearPrediction()
+    {
+        StopDelayClearPrediction();
+        // 开启一个 0.1 秒的缓冲窗口
+        _delayStopTimer = StartCoroutine(DelayClearPredictionRoutine(0.1f));
+    }
+
+    private IEnumerator DelayClearPredictionRoutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        // 缓冲时间到，还没被 Cancel，说明真的离开了
+        if (readyClearRoutine != null)
+        {
+            StopCoroutine(readyClearRoutine);
+            readyClearRoutine = null;
+        }
+        _delayStopTimer = null;
+        ClearPrediction();
+    }
+
+    private void StopDelayClearPrediction()
+    {
+        if (_delayStopTimer != null)
+        {
+            StopCoroutine(_delayStopTimer);
+            _delayStopTimer = null;
+        }
     }
 
     public void ClearPrediction()
@@ -86,23 +135,23 @@ public class ClearSequenceService : MonoBehaviour
         ScoreManager.ClearPrediction();
     }
 
-    ///<summary>
-    ///第一下点击的预备消除协程
+    #endregion
+
+    /// <summary>
+    /// 对外暴露的启动消除流程的接口。
     /// </summary>
-    private IEnumerator ReadyClearCoroutine(List<ColorCell> cellsToClear)
+    public void StartClearFlow(Vector2 startLocation, ColorType targetColor)
     {
-        ClearPrediction();
-        currentSelectColorCells =cellsToClear;
-        ScoreManager.Instance.PredictCombo(cellsToClear);
-
-        foreach (ColorCell cell in cellsToClear.OrderBy(c => c.location.x))
+        if (clearRoutine != null) return;
+        // 1. 获取要清除的单元格列表 (调用 GridManager 的只读方法)
+        List<ColorCell> cellsToClear = GridManager.GetCellsToClear(startLocation, targetColor);
+        if (readyClearRoutine != null)
         {
-            //调用单元格被选中协程
-            yield return cell.BeSelected();
+            StopCoroutine(readyClearRoutine);
+            readyClearRoutine = null;
         }
+        clearRoutine = StartCoroutine(ClearFlowCoroutine(cellsToClear));
     }
-
-
 
     /// <summary>
     /// 核心消除流程编排。

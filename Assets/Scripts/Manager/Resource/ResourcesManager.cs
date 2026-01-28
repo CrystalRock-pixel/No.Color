@@ -49,7 +49,6 @@ public class ResourcesManager : MonoBehaviour
     // 存储归一化后的特殊格子概率
     public Dictionary<GameObject, float> CurrentSpecialCellProbabilities { get; private set; } = new Dictionary<GameObject, float>();
 
-
     [Header("颜色模块")]
     // 存储每个事件（颜色）的权重。默认初始权重为 1.0。
     private Dictionary<ColorType, float> colorWeights = new()
@@ -63,6 +62,12 @@ public class ResourcesManager : MonoBehaviour
     // 获取归一化后的实际概率 (只读属性)
     public Dictionary<ColorType, float> CurrentProbabilities { get; private set; } = new Dictionary<ColorType, float>();
 
+    [Header("方块背包")]
+    [SerializeField] private CellAssemblyConfig cellAssemblyConfig;
+    [SerializeField] private GameObject baseCellPrefab;
+    public List<CellConfig> masterDeck = new List<CellConfig>();
+    public List<CellConfig> currentRunDeck = new List<CellConfig>();
+
     private void Awake()
     {
         Instance = this;
@@ -71,7 +76,7 @@ public class ResourcesManager : MonoBehaviour
         enemyList = Resources.LoadAll<EnemyBase>("EnemyAssets").ToList();
         uiCardPrefab = Resources.Load<GameObject>("Prefabs/Card/NewUICard");
         uiPropPrefab = Resources.Load<GameObject>("Prefabs/Prop/NewUIProp");
-        colorGridPrefab = Resources.Load<GameObject>("Prefabs/ColorCell");
+        colorGridPrefab = Resources.Load<GameObject>("Prefabs/ColorCell/ColorCell");
         shadowPrefab = Resources.Load<GameObject>("Prefabs/Other/Shadow");
         shadowUIPrefab = Resources.Load<GameObject>("Prefabs/Other/Shadow(UI)");
     }
@@ -79,6 +84,8 @@ public class ResourcesManager : MonoBehaviour
     private void Start()
     {
         InitCardsDict();
+        InitCellDeck();
+
         RecalculateColorProbabilities();
         InitSpecialCellWeights();
         RecalculateSpecialCellProbabilities();
@@ -99,6 +106,115 @@ public class ResourcesManager : MonoBehaviour
             enemyDict[enemy.enemyName] = enemy;
         }
     }
+
+    #region 方块背包模块
+
+    private void InitCellDeck()
+    {
+        for(int i = 0; i < 10; i++)
+        {
+            masterDeck.Add(new CellConfig(ColorType.Red, "ColorCell"));
+            masterDeck.Add(new CellConfig(ColorType.Yellow, "ColorCell"));
+            masterDeck.Add(new CellConfig(ColorType.Blue, "ColorCell"));
+            masterDeck.Add(new CellConfig(ColorType.Green, "ColorCell"));
+        }
+        for(int i = 0; i < 5; i++)
+        {
+            masterDeck.Add(new CellConfig(ColorType.Red, "ChipsCell"));
+            masterDeck.Add(new CellConfig(ColorType.Yellow, "ChipsCell"));
+            masterDeck.Add(new CellConfig(ColorType.Blue, "ChipsCell"));
+            masterDeck.Add(new CellConfig(ColorType.Green, "ChipsCell"));
+        }
+        for (int i = 0; i < 5; i++)
+        {
+            masterDeck.Add(new CellConfig(ColorType.Red, "MagnifactionCell"));
+            masterDeck.Add(new CellConfig(ColorType.Yellow, "MagnifactionCell"));
+            masterDeck.Add(new CellConfig(ColorType.Blue, "MagnifactionCell"));
+            masterDeck.Add(new CellConfig(ColorType.Green, "MagnifactionCell"));
+        }
+        ResetCellDeck();
+    }
+
+    /// <summary>
+    /// 每一关开始时调用，将当前牌组恢复到初始状态
+    /// </summary>
+    public void ResetCellDeck()
+    {
+        currentRunDeck = new List<CellConfig>(masterDeck);
+    }
+
+    /// <summary>
+    /// 从背包中随机抽取并“消耗”一个方块
+    /// </summary>
+    public GameObject GetCellFromDeck()
+    {
+        if (currentRunDeck.Count == 0)
+        {
+            Debug.LogWarning("背包已空！");
+        }
+
+        // 随机选一个索引
+        int randomIndex = UnityEngine.Random.Range(0, currentRunDeck.Count);
+        CellConfig config = currentRunDeck[randomIndex];
+
+        // 从当前可用列表中移除
+        currentRunDeck.RemoveAt(randomIndex);
+        return BuildCellFromConfig(config);
+    }
+
+    public GameObject BuildCellFromConfig(CellConfig config)
+    {
+        // 1. 实例化通用的“壳”
+        GameObject go = Instantiate(baseCellPrefab);
+
+        // 2. 根据字符串反射添加对应的脚本组件
+        // 如果 scriptTypeName 是 "ColorCell"，就添加 ColorCell 组件
+        System.Type type = System.Type.GetType(config.scriptTypeName);
+        ColorCell cellComponent = go.AddComponent(type) as ColorCell;
+
+        // 3. 调用 Init 配置
+        cellComponent.Init(config.colorType);
+
+        return go;
+    }
+
+    /// <summary>
+    /// 向全局背包添加新方块。
+    /// </summary>
+    public void AddCellToMasterDeck(GameObject cellObject)
+    {
+        ColorCell cellScript = cellObject.GetComponent<ColorCell>();
+        if (cellScript != null)
+        {
+            // 使用构造函数 2，自动提取脚本类型和颜色信息
+            CellConfig newConfig = new CellConfig(cellScript);
+            masterDeck.Add(newConfig);
+        }
+    }
+
+    /// <summary>
+    /// 向当前关卡背包添加新方块
+    /// </summary>
+    public void AddCellToCurrentDeck(GameObject cellObject)
+    {
+        ColorCell cellScript = cellObject.GetComponent<ColorCell>();
+        if (cellScript != null)
+        {
+            currentRunDeck.Add(new CellConfig(cellScript));
+        }
+    }
+
+    public Sprite GetCellSprite(ColorType color)
+    {
+        return cellAssemblyConfig.GetColorSprite(color);
+    }
+
+    public Sprite GetSpecialCellSprite(string typeName)
+    {
+        return cellAssemblyConfig.GetTypeSprite(typeName);
+    }
+
+    #endregion
 
     private void InitSpecialCellWeights()
     {
@@ -385,24 +501,6 @@ public class ResourcesManager : MonoBehaviour
         // 理论上，如果所有概率的总和为 1.0，代码不应该到达这里。
         // 作为安全回退，如果出现浮点数误差等问题，返回列表中的第一个颜色。
         return CurrentProbabilities.Keys.First();
-    }
-
-    public Sprite GetCellSprite(ColorType color)
-    {
-        switch (color)
-        {
-            case ColorType.Red:
-                return redCellSprite;
-            case ColorType.Green:
-                return greenCellSprite;
-            case ColorType.Blue:
-                return blueCellSprite;
-            case ColorType.Yellow:
-                return yellowCellSprite;
-            default:
-                Debug.LogError($"Invalid ColorType: {color}");
-                return null;
-        }
     }
 }
 public static class ScriptableObjectExtensions

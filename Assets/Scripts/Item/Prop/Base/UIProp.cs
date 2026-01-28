@@ -40,7 +40,7 @@ public class UIProp : MonoBehaviour, IGood, IPointerEnterHandler,
     private RectTransform rectTransform;
 
 
-    private GameObject shadow; 
+    private GameObject shadow;
 
     private void Awake()
     {
@@ -96,14 +96,17 @@ public class UIProp : MonoBehaviour, IGood, IPointerEnterHandler,
 
     public void OnSell()
     {
-        throw new System.NotImplementedException();
+        Player.Instance.Sell(this);
+        propData.OnSold();
+        Debug.Log("出售道具" + PropName);
+        OnDestroyed();
     }
 
     public void OnUse()
     {
         propData.OnUse();
 
-        propData.OnDestory();
+        OnDestroyed();
     }
 
     public void OnDestroyed()
@@ -115,25 +118,36 @@ public class UIProp : MonoBehaviour, IGood, IPointerEnterHandler,
         Destroy(gameObject);
     }
 
+    public void RemoveLayoutManager()
+    {
+        LayoutManager.RemoveMember(this);
+        LayoutManager = null;
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         PointerEnterEvent.Invoke(this);
         Vector3 dialogPosition = transform.position + new Vector3(2, 0, -1);
         InfoPanelConfig config = new InfoPanelConfig(PropName, Description, false);
 
-        UIManager.Instance.ShowInfoPanel(config, dialogPosition, this.transform);
+        if (!isSelected)
+        {
+            UIManager.Instance.ShowInfoPanel(config, dialogPosition, this.transform);
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (isDragging) return;
+        if (isDragging||isSelected) return;
         PointerExitEvent.Invoke(this);
         UIManager.Instance.RemoveInfoPanel(this.transform);
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        if (isDragging) return;
 
+        Player.Instance.HandleClicked(this.transform);
     }
     public void OnBeginDrag(PointerEventData eventData)
     {
@@ -171,7 +185,15 @@ public class UIProp : MonoBehaviour, IGood, IPointerEnterHandler,
         if (selected)
         {
             Vector3 dialogPosition = rectTransform.position + new Vector3(2, 0, -1);
-            InfoPanelConfig config = new InfoPanelConfig(PropName, Description, false, 1, Price);
+            InfoPanelConfig config;
+            if (!isBought)
+            {
+                config = new InfoPanelConfig(PropName, Description, false, 1, Price);
+            }
+            else
+            {
+                config = new InfoPanelConfig(PropName, Description, true,2,SellPrice);
+            }
             UIManager.Instance.ShowInfoPanel(config, dialogPosition, this.transform);
         }
         else

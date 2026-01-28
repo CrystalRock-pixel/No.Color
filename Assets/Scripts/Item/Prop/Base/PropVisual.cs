@@ -27,6 +27,7 @@ public class PropVisual : SmoothFollowVisual
 
     public void ResetVisuals()
     {
+        image.material = oriMat;
         transform.DOKill();
 
         transform.localRotation = Quaternion.identity;

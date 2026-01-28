@@ -61,9 +61,10 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    //待施工
     private ColorCell CreateGridCell(int x,int y)
     {
-        GameObject gridCell = ResourcesManager.Instance.GetOneRandomColorCell();
+        GameObject gridCell = ResourcesManager.Instance.GetCellFromDeck();
         gridCell.transform.position=new Vector3(x,y,0);
         gridCell.transform.parent = this.transform;
         gridCell.GetComponent<ColorCell>().Init(new Vector2(x, y), this);
@@ -73,7 +74,7 @@ public class GridManager : MonoBehaviour
 
     private ColorCell CreateGridCell(int x, int y, float offsetX, float offsetY)
     {
-        GameObject gridCell = ResourcesManager.Instance.GetOneRandomColorCell();
+        GameObject gridCell = ResourcesManager.Instance.GetCellFromDeck();
 
         // 计算位置：脚本物体位置 + 偏移后的网格坐标
         Vector3 position = this.transform.position + new Vector3(

@@ -98,6 +98,7 @@ public class LevelManager : MonoBehaviour
         UIManager.Instance.UpdateEnemyPanel();
         UIManager.Instance.UpdateLevelInfo();
         UIManager.Instance.ResetScorePanel();
+        ResourcesManager.Instance.ResetCellDeck();
         //关卡刷新：过关分数刷新，信息刷新，过关事件触发
     }
 

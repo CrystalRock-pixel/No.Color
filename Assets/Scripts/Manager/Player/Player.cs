@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using static ColorCell;
 
 public class Player : MonoBehaviour
@@ -22,8 +20,8 @@ public class Player : MonoBehaviour
     private UICard currentSelectedCard;
     private UIProp currentSelectedProp;
 
-    public RectTransform relicCardPanel;
-    public RectTransform propCardPanel;
+    public RectTransform cardPanel;
+    public RectTransform propPanel;
     public Transform GoodsGroup;
 
     private ColorCell currentHoveredCell;
@@ -60,7 +58,7 @@ public class Player : MonoBehaviour
         levelManager = LevelManager.Instance;
         clearSequenceService= ClearSequenceService.Instance;
 
-        cardSlotManager=relicCardPanel.GetComponent<LayoutSlotManager>();
+        cardSlotManager=cardPanel.GetComponent<LayoutSlotManager>();
         cardSlotManager.OnLayoutOrderChanged += UpdateCardOrder;
     }
     private void Update()
@@ -76,16 +74,7 @@ public class Player : MonoBehaviour
     }
     public void OnMouseCellHover(ColorCell cell)
     {
-        if (currentHoveredCell != cell||currentHoveredCell==null)
-        {
-            currentHoveredCell = null;
-            clearSequenceService.ClearPrediction();
-        }
-        currentHoveredCell = cell;
-        if (currentHoveredCell != null)
-        {
-            clearSequenceService.StartClearReadyFlow(currentHoveredCell.location, currentHoveredCell.colorType);
-        }
+       clearSequenceService.StartClearReadyFlow(cell);
     }
 
     public void OnMouseClickCell(ColorCell cell)
@@ -99,7 +88,7 @@ public class Player : MonoBehaviour
          clearSequenceService.StartSwitchColorFlow(cell);
     }
 
-    public void HandleCardClicked(Transform clickedTransform)
+    public void HandleClicked(Transform clickedTransform)
     {
         UICard clickedCard = clickedTransform.GetComponent<UICard>();
         if (clickedCard != null)
@@ -141,7 +130,7 @@ public class Player : MonoBehaviour
             }
             else // 当前没有选中的卡牌：选中新卡
             {
-                clickedCard.SetSelected(true);
+                clickedProp.SetSelected(true);
                 currentSelectedProp = clickedProp;
             }
         }
@@ -157,6 +146,12 @@ public class Player : MonoBehaviour
             {
                 AddGood(uiCard);
                 currentSelectedCard = null;
+            }
+            UIProp uIProp = good.Transform.GetComponent<UIProp>();
+            if (uIProp != null)
+            {
+                AddGood(uIProp);
+                currentSelectedProp = null;
             }
             return true;
         }
@@ -178,6 +173,9 @@ public class Player : MonoBehaviour
         else if(good is UIProp uiProp)
         {
             propHandler.AddProp(uiProp);
+            uiProp.RemoveLayoutManager();
+            uiProp.transform.SetParent(GoodsGroup, false);
+            uiProp.transform.position=propPanel.position+new Vector3(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f), 0f);
         }
     }
     public void Sell(IGood good)

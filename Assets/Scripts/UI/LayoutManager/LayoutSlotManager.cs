@@ -70,7 +70,6 @@ public class LayoutSlotManager : MonoBehaviour
             OnLayoutOrderChanged?.Invoke();
         }
     }
-
     // 更新影子位置：仅操作插槽层级
     public void UpdateShadowPosition(ILayoutMember draggingMember)
     {
