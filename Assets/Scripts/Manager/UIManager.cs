@@ -21,6 +21,7 @@ public class UIManager : MonoBehaviour
 
     public Transform backCanvasTrans;
     public Transform frontCanvasTrans;
+    public Transform frontestCanvasTrans;
 
     public Transform shopPanelTrans;
     public Button shopNextLevelBtn;
@@ -127,7 +128,7 @@ public class UIManager : MonoBehaviour
     /// <param name="position"></param>
     /// <param name="infoObject"></param>
 
-    public void ShowInfoPanel(InfoPanelConfig config,Vector3 position,Transform infoObject)
+    public void ShowInfoPanel(InfoPanelConfig config,Vector3 position,Transform infoObject,bool frontestCanvas=false)
     {
         if (currentInfoPanelDicts.ContainsKey(infoObject))
         {
@@ -139,7 +140,14 @@ public class UIManager : MonoBehaviour
 
         GameObject infoPanel=Instantiate(infoPanelPrefab, position, Quaternion.identity);
         infoPanel.GetComponent<InfoPanel>().Init(config,infoObject);
-        infoPanel.transform.SetParent(frontCanvasTrans, true);
+        if (frontestCanvas)
+        {
+            infoPanel.transform.SetParent(frontestCanvasTrans, true);
+        }
+        else
+        {
+            infoPanel.transform.SetParent(frontCanvasTrans, true);
+        }
         infoPanel.transform.localScale = Vector3.one;
         StartCoroutine(ObjectAnimator.Instance.AnimateIn(infoPanel, startRotationZ: 5f));
         

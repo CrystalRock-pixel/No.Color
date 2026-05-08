@@ -62,7 +62,7 @@ public class ColorCell : MonoBehaviour,IPointerEnterHandler,IPointerExitHandler,
     {
         if (isPackCell && CurrentSlot != null)
         {
-            transform.position = CurrentSlot.position;
+            transform.position = CurrentSlot.position+new Vector3(0,0,-1f);
         }
     }
 
@@ -109,7 +109,7 @@ public class ColorCell : MonoBehaviour,IPointerEnterHandler,IPointerExitHandler,
         if(string.IsNullOrEmpty(cellName) ) return;
         InfoPanelConfig config = new InfoPanelConfig(cellName, description, false);
         Vector3 position = transform.position + new Vector3(2, 0, 0);
-        UIManager.Instance.ShowInfoPanel(config,position,this.transform);
+        UIManager.Instance.ShowInfoPanel(config,position,this.transform,true);
     }
     public void MouseExit()
     {
